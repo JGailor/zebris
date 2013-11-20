@@ -37,15 +37,19 @@ module Zebris
         end
       end
 
-      def serialize(object)
-        attributes = {"key" => object.key}
+      def serialize(object, embed = false)
+        attributes = (embed ? {} : {"key" => object.key})
 
         properties.each do |property, conversion|
           if val = object.send(property.to_sym)
             if conversion.kind_of?(Zebris::Types::GenericConverter)
               attributes[property.to_s] = conversion.serializer.call(val)
             else
-              attributes[property.to_s] = conversion.serialize(val)
+              if conversion.ancestors.include?(Zebris::Document)
+                attributes[property.to_s] = conversion.serialize(val, true)
+              else
+                attributes[property.to_s] = conversion.serialize(val)
+              end
             end
           end
         end
@@ -53,7 +57,7 @@ module Zebris
         collections.each do |property, klass|
           attributes[property] ||= []
           object.send(:instance_variable_get, :"@#{property}").each do |record|
-            attributes[property] << record.serialize
+            attributes[property] << record.class.serialize(record, true)
           end
         end
 

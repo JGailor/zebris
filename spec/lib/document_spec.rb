@@ -89,7 +89,7 @@ describe Zebris::Document do
           person.age = age
           person.stub(:key).and_return(person_key)
 
-          redis.should_receive(:set).with(key, {"key" => key, "person" => {"key" => person_key, "name" => name, "age" => age}}.to_json)
+          redis.should_receive(:set).with(key, {"key" => key, "person" => {"name" => name, "age" => age}}.to_json)
 
           document = NestedDocument.new
           document.stub(:key).and_return(key)
