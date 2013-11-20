@@ -60,7 +60,7 @@ Zebris is happy to delegate to any Redis client that supports the 2.0+ command l
 
     # Tyler is back
 
-### Basic Document Peristence
+### Custom serialization/deserialization
 
     class WaterSample
       include Zebris::Document
