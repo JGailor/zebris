@@ -10,10 +10,30 @@ describe Zebris::Document do
     property :last_update, RedisDate
   end
 
-  let!(:redis) {double(:redis, set: true, get: true)}
-  let(:document) {Document.new}
-  let(:key) {"ABCDEFG"}
-  let(:name) {"John Henry"}
+  class LambdaDocument
+    include Zebris::Document
+    key {UUID.generate}
+    property :name, lambda {|n| n}, lambda {|n| String.new(n)}
+  end
+
+  class NestedDocument
+    include Zebris::Document
+    key {UUID.generate}
+    property :person, Person
+
+    class Person
+      include Zebris::Document
+      key {UUID.generate}
+      property :name, RedisString
+      property :age, RedisInteger
+    end
+  end
+
+  let!(:redis)      {double(:redis, set: true, get: true)}
+  let(:key)         {"ABCDEFG"}
+  let(:name)        {"John Henry"}
+  let(:age)         {34}
+  let(:last_update) {Date.today - 2}
 
   before do
     Zebris.redis = redis
@@ -21,81 +41,61 @@ describe Zebris::Document do
 
   context "saving documents" do
     it "should persist a document with a name property" do
+      document = Document.new
       document.stub(:key).and_return(key)
       redis.should_receive(:set).with(key, {"key" => key, "name" => name}.to_json)
 
       document.name = name
       document.save
     end
-  end
 
-  context "property types" do
-    it "properly serializes the built in types" do
-      age = 34
-      last_update = Date.today - 2
+    context "property types" do
+      it "properly serializes the built in types" do
+        document = Document.new
+        document.stub(:key).and_return(key)
+        redis.should_receive(:set).with(key, {"key" => key, "name" => name, "age" => age, "last_update" => last_update.rfc3339}.to_json)
 
-      document.stub(:key).and_return(key)
-      redis.should_receive(:set).with(key, {"key" => key, "name" => name, "age" => age, "last_update" => last_update.rfc3339}.to_json)
-
-      document.name = name
-      document.age = age
-      document.last_update = last_update
-      document.save
-    end
-
-    it "properly serializes the data when given a lambda" do
-      class LambdaDocument
-        include Zebris::Document
-        key {"A Bad Key"}
-        property :name, lambda {|n| n}, lambda {|n| String.new(n)}
+        document.name = name
+        document.age = age
+        document.last_update = last_update
+        document.save
       end
 
-      document = LambdaDocument.new
-      document.stub(:key).and_return(key)
-      redis.should_receive(:set).with(key, {"key" => key, "name" => name}.to_json)
+      it "properly serializes the data when given a lambda" do
+        document = LambdaDocument.new
+        document.stub(:key).and_return(key)
+        redis.should_receive(:set).with(key, {"key" => key, "name" => name}.to_json)
 
-      document.name = name
-      document.save
-    end
+        document.name = name
+        document.save
+      end
 
-    context "nested type collections" do
-      it "serializes nested types if they include Zebris::Document" do
-        class NestedDocument
-          include Zebris::Document
-          key {"A Bad Key"}
-          property :person, Person
+      context "nested type collections" do
+        it "serializes nested types if they include Zebris::Document" do
+          expect {
+            document = NestedDocument.new
+            document.person = NestedDocument::Person.new
+            document.person.name = name
+            document.person.age = age
+            document.save
+          }.to_not raise_exception
+        end
 
-          class Person
+        it "raises an exception if you attempt to declare a collection of things that aren't Zebris::Document" do
+          class BadDocument
             include Zebris::Document
-            key {"A Worse Key"}
-            property :name, RedisString
-            property :age, RedisInteger
+
+            key {"This is a horrible key"}
+
+            property :person, Object
           end
+
+          expect {
+            document = BadDocument.new
+            document.person = Object.new
+            document.save
+          }.to raise_exception
         end
-
-        expect {
-          document = NestedDocument.new
-          document.person = NestedDocument::Person.new
-          document.person.name = "Test User"
-          document.person.age = 34
-          document.save
-        }.to_not raise_exception
-      end
-
-      it "raises an exception if you attempt to declare a collection of things that aren't Zebris::Document" do
-        class BadDocument
-          include Zebris::Document
-
-          key {"This is a horrible key"}
-
-          property :person, Object
-        end
-
-        expect {
-          document = BadDocument.new
-          document.person = Object.new
-          document.save
-        }.to raise_exception
       end
     end
   end
