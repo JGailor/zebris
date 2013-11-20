@@ -60,6 +60,32 @@ Zebris is happy to delegate to any Redis client that supports the 2.0+ command l
 
     # Tyler is back
 
+### Basic Document Peristence
+
+    class WaterSample
+      include Zebris::Document
+
+      key {UUID.generate}   # Or anything that will generate unique keys
+
+      # Redis likes strings, so you can provide a proc to serialize
+      # and deserialize your data to/from strings if it doesn't fit
+      # the built-in types
+      property :subject, String
+      property :time, lambda {|time| time.to_i.to_s}, lambda {|milli| Time.at(milli.to_i)}
+      property :measurement, lambda {|m| "#{m.value}:#{m.units}"}, lambda {|m| value,units = m.split(/:/); Measurement.new(value.to_f, units)}
+    end
+
+    sample = WaterSample.new
+    sample.subject = "Arsenic Levels"
+    sample.time = Time.now
+    sample.measurement = Measurement.new(0.05, "ppm")
+
+    key = sample.save
+    => "some uuid here"
+
+    last_sample = Sample.find(key)
+
+
 ## Contributing
 
 1. Fork it
