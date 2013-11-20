@@ -5,10 +5,10 @@ require 'json'
 
 module Zebris
   def self.redis=(connection)
-    @@redis = connection
+    @redis = connection
   end
 
   def self.redis
-    @@redis
+    @redis
   end
 end
