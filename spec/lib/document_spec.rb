@@ -34,7 +34,7 @@ describe Zebris::Document do
     end
   end
 
-  let!(:redis)      {double(:redis, set: true, get: true)}
+  let!(:redis)      {double(:redis, set: "OK", get: true)}
   let(:key)         {"ABCDEFG"}
   let(:name)        {"John Henry"}
   let(:age)         {34}
