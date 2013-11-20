@@ -9,9 +9,9 @@ module Zebris
       end
     end
 
-    class RedisDate
+    class Date
       def self.deserialize(date)
-        Date.parse(date)
+        ::Date.parse(date)
       end
 
       def self.serialize(val)
@@ -19,7 +19,7 @@ module Zebris
       end
     end
 
-    class RedisInteger
+    class Integer
       def self.deserialize(val)
         (val && val != "") ? val.to_i : nil
       end
@@ -29,7 +29,7 @@ module Zebris
       end
     end
 
-    class RedisFloat
+    class Float
       def self.deserialize(val)
         (val && val != "") ? val.to_f : nil
       end
@@ -39,7 +39,7 @@ module Zebris
       end
     end
 
-    class RedisString
+    class String
       def self.deserialize(val)
         val ? val.to_s : nil
       end

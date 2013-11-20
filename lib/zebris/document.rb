@@ -2,10 +2,6 @@ module Zebris
   module Document
     def self.included(klass)
       klass.extend(ClassMethods)
-      Zebris::Types.constants.each do |const|
-        clazz = Zebris::Types.const_get(const)
-        klass.const_set const, clazz
-      end
     end
 
     def save
@@ -120,7 +116,11 @@ module Zebris
           raise "When providing a deserializer you need to provide a deserializer" if deserializer.nil?
           properties[name] = Zebris::Types::GenericConverter.new(type_or_serializer, deserializer)
         else
-          properties[name] = type_or_serializer
+          if Zebris::Types.constants.include?(type_or_serializer.to_s.to_sym)
+            properties[name] = Zebris::Types.const_get(type_or_serializer.to_s.to_sym)
+          else
+            properties[name] = type_or_serializer
+          end
         end
         self.send(:attr_accessor, name)
       end

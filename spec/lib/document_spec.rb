@@ -5,9 +5,9 @@ describe Zebris::Document do
   class Document
     include Zebris::Document
     key {UUID.generate}
-    property :name, RedisString
-    property :age, RedisInteger
-    property :last_update, RedisDate
+    property :name, String
+    property :age, Integer
+    property :last_update, Date
   end
 
   class LambdaDocument
@@ -24,8 +24,8 @@ describe Zebris::Document do
     class Person
       include Zebris::Document
       key {UUID.generate}
-      property :name, RedisString
-      property :age, RedisInteger
+      property :name, String
+      property :age, Integer
     end
   end
 
