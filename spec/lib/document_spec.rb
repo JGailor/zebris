@@ -10,6 +10,11 @@ describe Zebris::Document do
     property :last_update, Date
   end
 
+  class KeylessDocument
+    include Zebris::Document
+    property :name, String
+  end
+
   class LambdaDocument
     include Zebris::Document
     key {UUID.generate}
@@ -47,6 +52,12 @@ describe Zebris::Document do
 
       document.name = name
       document.save
+    end
+
+    it "raises an error when trying to save a document without a key generator" do
+      document = KeylessDocument.new
+      document.name = name
+      expect{document.save}.to raise_exception
     end
 
     context "property types" do

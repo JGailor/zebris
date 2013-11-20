@@ -5,6 +5,8 @@ module Zebris
     end
 
     def save
+      raise "#{self.class} does not define a key generator" unless self.class.keygen.kind_of?(Proc)
+
       self.class.scrub
       data = self.class.serialize(self)
 
@@ -100,11 +102,11 @@ module Zebris
       end
 
       def key(&block)
-        self.class.instance_variable_set(:@keygen, block)
+        @keygen = block
       end
 
       def keygen
-        self.class.instance_variable_get(:@keygen)
+        @keygen
       end
 
       def properties
