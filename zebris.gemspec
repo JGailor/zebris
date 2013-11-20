@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["jgailor@gmail.com"]
   spec.description   = %q{Zebris is a library to persist your object data to Redis.  Its goal is to be as unobtrusive as possible.}
   spec.summary       = %q{Zebris makes persisting your objects to Redis easy.}
-  spec.homepage      = ""
+  spec.homepage      = "https://github.com/JGailor/zebris"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files`.split($/)
