@@ -29,7 +29,7 @@ module Zebris
 
         if stored
           data = JSON.parse(stored)
-          restore(data)
+          deserialize(data)
         else
           nil
         end
@@ -82,7 +82,7 @@ module Zebris
         end
       end
 
-      def restore(data)
+      def deserialize(data)
         scrub
 
         self.new.tap do |instance|
@@ -96,7 +96,7 @@ module Zebris
               end
             elsif self.collections[property] && value.instance_of?(Array)
               value.each do |row|
-                instance.send(:"instance_variable_get", :"@#{property}") << self.collections[property].restore(row)
+                instance.send(:"instance_variable_get", :"@#{property}") << self.collections[property].deserialize(row)
               end
             end
           end

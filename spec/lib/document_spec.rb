@@ -72,13 +72,18 @@ describe Zebris::Document do
 
       context "nested type collections" do
         it "serializes nested types if they include Zebris::Document" do
-          expect {
-            document = NestedDocument.new
-            document.person = NestedDocument::Person.new
-            document.person.name = name
-            document.person.age = age
-            document.save
-          }.to_not raise_exception
+          person_key = "123456"
+          person = NestedDocument::Person.new
+          person.name = name
+          person.age = age
+          person.stub(:key).and_return(person_key)
+
+          redis.should_receive(:set).with(key, {"key" => key, "person" => {"key" => person_key, "name" => name, "age" => age}}.to_json)
+
+          document = NestedDocument.new
+          document.stub(:key).and_return(key)
+          document.person = person
+          document.save
         end
 
         it "raises an exception if you attempt to declare a collection of things that aren't Zebris::Document" do
@@ -95,6 +100,49 @@ describe Zebris::Document do
             document.person = Object.new
             document.save
           }.to raise_exception
+        end
+      end
+    end
+  end
+
+  context "restoring documents" do
+    let(:serialized_document) {{"key" => key, "name" => name}.to_json}
+    let(:types_serialized_document) {{"key" => key, "name" => name, "age" => age, "last_update" => last_update.rfc3339}.to_json}
+    let(:lambda_serialized_document) {{"key" => key, "name" => name}.to_json}
+    let(:nested_serialized_document) {{"key" => key, "person" => {"name" => name, "age" => age}}.to_json}
+
+    it "delegates to the redis object" do
+      redis.should_receive(:get).with(key).and_return(serialized_document)
+      Document.find(key)
+    end
+
+    it "rebuilds an object that has been saved to redis" do
+      redis.stub(:get).and_return(serialized_document)
+      document = Document.find(key)
+      expect(document.name).to eq(name)
+    end
+
+    context "property types" do
+      it "rebuilds an object using built-in types" do
+        redis.stub(:get).and_return(types_serialized_document)
+        document = Document.find(key)
+        expect(document.name).to eq(name)
+        expect(document.age).to eq(age)
+        expect(document.last_update).to eq(last_update)
+      end
+
+      it "rebuilds an object using lambda serializers/deserializers" do
+        redis.stub(:get).and_return(lambda_serialized_document)
+        document = LambdaDocument.find(key)
+        expect(document.name).to eq(name)
+      end
+
+      context "nested documents" do
+        it "rebuilds a nested object structure" do
+          redis.stub(:get).and_return(nested_serialized_document)
+          document = NestedDocument.find(key)
+          expect(document.person.name).to eq(name)
+          expect(document.person.age).to eq(age)
         end
       end
     end
