@@ -1,3 +1,5 @@
+[![Gem Version](https://badge.fury.io/rb/zebris.png)](http://badge.fury.io/rb/zebris)
+
 # Zebris
 
 Zebris is built to allow you to add persisting and retrieving your objects to and from Redis with a minimum of hassle or re-writing of your code.
