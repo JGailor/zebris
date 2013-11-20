@@ -10,7 +10,11 @@ module Zebris
       self.class.scrub
       data = self.class.serialize(self)
 
-      Zebris.redis.set self.key, data.to_json
+      result = Zebris.redis.set self.key, data.to_json
+
+      raise "Could not save #{self.class}" unless result == "OK"
+
+      self.key
     end
 
     def key
