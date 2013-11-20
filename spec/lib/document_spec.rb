@@ -34,6 +34,32 @@ describe Zebris::Document do
     end
   end
 
+  class CollectionDocument
+    include Zebris::Document
+
+    key {UUID.generate}
+
+    collection :people, Person
+
+    class Person
+      include Zebris::Document
+
+      property :name, String
+      property :age, Integer
+    end
+  end
+
+  class InvalidCollectionDocument
+    include Zebris::Document
+
+    key {UUID.generate}
+
+    collection :people, Person
+
+    class Person
+    end
+  end
+
   let!(:redis)      {double(:redis, set: "OK", get: true)}
   let(:key)         {"ABCDEFG"}
   let(:name)        {"John Henry"}
@@ -110,6 +136,31 @@ describe Zebris::Document do
             document = BadDocument.new
             document.person = Object.new
             document.save
+          }.to raise_exception
+        end
+      end
+
+      context "collections" do
+        it "serializes each item in a collection properly" do
+          document = CollectionDocument.new
+          document.stub(:key).and_return(key)
+          redis.should_receive(:set).with(key, {"key" => key, "people" => [{"name" => name, "age" => age}]}.to_json)
+
+          p = CollectionDocument::Person.new
+          p.name = name
+          p.age = age
+
+          document.people << p
+          document.save
+        end
+
+        it "raises an error if the serialization type does not support the Zebris::Document interface" do
+          document = InvalidCollectionDocument.new
+          document.stub(:key).and_return(key)
+          document.people << InvalidCollectionDocument::Person.new
+
+          expect {
+            expect document.save
           }.to raise_exception
         end
       end

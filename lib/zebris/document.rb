@@ -55,9 +55,11 @@ module Zebris
         end
 
         collections.each do |property, klass|
+          raise "#{klass} does not implement the Zebris::Document interface" unless klass.ancestors.include?(Zebris::Document)
+
           attributes[property] ||= []
           object.send(:instance_variable_get, :"@#{property}").each do |record|
-            attributes[property] << record.class.serialize(record, true)
+            attributes[property] << klass.serialize(record, true)
           end
         end
 
@@ -141,7 +143,10 @@ module Zebris
 
       def collection(name, klass)
         collections[name] = klass
-        self.send(:attr_accessor, name)
+        self.send(:attr_writer, name)
+        self.send(:define_method, :"#{name}") {
+          self.send(:instance_variable_get, :"@#{name}") || self.send(:instance_variable_set, :"@#{name}", [])
+        }
       end
     end
   end
