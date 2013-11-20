@@ -85,6 +85,10 @@ Zebris is happy to delegate to any Redis client that supports the 2.0+ command l
 
     last_sample = Sample.find(key)
 
+### Embedded Documents
+There is also support for embedded documents.  If you declare a property with a type that includes Zebris::Document, what
+you will get is an embedded serialization of the property when you save.  This is different than a relational model where
+the two documents are stored separately and related together via keys.
 
 ## Contributing
 
