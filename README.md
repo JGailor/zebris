@@ -2,9 +2,12 @@
 
 Zebris is built to allow you to add persisting and retrieving your objects to and from Redis with a minimum of hassle or re-writing of your code.
 When I needed a library to do something similar, I noticed that a lot of the other Redis persistence libraries were very opinionated or tried to
-implement the ActiveRecord pattern, which is nice but would have required me to re-write a lot of code to conform to the libraries idioms than I
-wanted to do.  My goal was to make it as easy as possible to add a Gem to my project and with as little code as possible make it easy to persist
-the object to Redis and retrieve it later.
+implement the ActiveRecord pattern, which is nice but would have required me to re-write a lot more of my code to conform to the libraries idioms
+than I wanted to do.  My goal was to make it as easy as possible to add a ruby gem to my project and with as little code as possible make it easy to
+persist the object to Redis and retrieve it later.  Such is Zebris, or so I hope.
+
+I welcome all feedback and suggestions on how to improve Zebris.  It's very young, but I have a roadmap in mind to add some things that I think will
+allow Zebris to keep it's simplicity and general purpose use while adding a lot of utility for anyone using it.
 
 ## Installation
 
