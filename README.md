@@ -90,6 +90,39 @@ There is also support for embedded documents.  If you declare a property with a 
 you will get is an embedded serialization of the property when you save.  This is different than a relational model where
 the two documents are stored separately and related together via keys.
 
+  class Listing
+    include Zebris::Document
+
+    key {UUID.generate}
+
+    collection :people, Person
+
+    class Person
+      include Zebris::Document
+
+      # No key needed since this is embedded
+
+      property :name, String
+      property :age, Integer
+
+      def initialize(name, age)
+        @name = name
+        @age = age
+      end
+    end
+  end
+
+  l = Listing.new
+  l.people << Listing::Person.new("John", 30)
+  l.people << Listing::Person.new("Mary", 28)
+
+  key = l.save
+
+  # ... some time later ...
+  l2 = Listing.find(key)
+
+  # Our listings are back
+
 ## Contributing
 
 1. Fork it
