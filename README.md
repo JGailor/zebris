@@ -1,4 +1,5 @@
 [![Gem Version](https://badge.fury.io/rb/zebris.png)](http://badge.fury.io/rb/zebris)
+[![Build Status](https://travis-ci.org/JGailor/zebris.png?branch=master)](https://travis-ci.org/JGailor/zebris)
 
 # Zebris
 
