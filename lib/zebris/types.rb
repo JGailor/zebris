@@ -25,6 +25,8 @@ module Zebris
     end
 
     class Date
+      require 'date'
+
       def self.deserialize(date)
         ::Date.parse(date)
       end
