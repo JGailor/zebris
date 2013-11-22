@@ -57,33 +57,4 @@ describe Zebris::Types do
       expect{Zebris::Types::Float.deserialize(o)}.to raise_exception
     end
   end
-
-  context Zebris::Types::String do
-    it "deserializes and returns a string as itself" do
-      s = %q{Do the ham bone}
-      expect(Zebris::Types::String.deserialize(s)).to eq(s)
-    end
-
-    it "deserializes and returns nil as nil" do
-      s = nil
-      expect(Zebris::Types::String.deserialize(s)).to eq(nil)
-    end
-
-    it "raises an exception if the object does not support being converted to a string" do
-      o = BasicObject.new
-      expect{Zebris::Types::String.deserialize(o)}.to raise_exception
-    end
-  end
-
-  context Zebris::Types::Hash do
-    it "does not attempt to serialize the hash, relying instead on the chosen serialization format to do that" do
-      h = {"name" => "Jeremy", "age" => 34}
-      expect(Zebris::Types::String.serialize(h)).to eq(h)
-    end
-
-    it "returns the object that the underlying serializer returns" do
-      h = {"name" => "Jeremy", "age" => 34}
-      expect(Zebris::Types::String.serialize(h)).to eq(h)
-    end
-  end
 end

@@ -7,7 +7,6 @@ module Zebris
     def save
       raise "#{self.class} does not define a key generator" unless self.class.keygen.kind_of?(Proc)
 
-      self.class.scrub
       data = self.class.serialize(self)
 
       result = Zebris.redis.set self.key, data.to_json
@@ -38,6 +37,7 @@ module Zebris
       end
 
       def serialize(object, embed = false)
+        scrub
         attributes = (embed ? {} : {"key" => object.key})
 
         properties.each do |property, conversion|
@@ -70,13 +70,19 @@ module Zebris
         unless @scrubbed
           self.properties.each do |property, type|
             unless type.kind_of?(Zebris::Types::GenericConverter)
-              if type.kind_of?(Symbol)
-                type = self.properties[property] = self.const_get(self.properties[property])
+              resolved_type = case type
+              when Symbol
+                if zebris_type?(type)
+                  Zebris::Types.const_get(type)
+                else
+                  klass = lookup_class(type)
+                  zebris_document?(klass) ? klass : Zebris::Types::BasicObject
+                end
+              else
+                zebris_document?(type) || zebris_type?(type) ? type : Zebris::Types::BasicObject
               end
 
-              unless type.ancestors.include?(Zebris::Document) || self.properties[property].to_s.start_with?(Zebris::Types.to_s)
-                raise "#{type} does not implement the Zebris::Document interface"
-              end
+              self.properties[property] = resolved_type
             end
           end
 
@@ -124,16 +130,8 @@ module Zebris
       end
 
       def property(name, type_or_serializer, deserializer = nil)
-        if type_or_serializer.kind_of?(Proc)
-          raise "When providing a deserializer you need to provide a deserializer" if deserializer.nil?
-          properties[name] = Zebris::Types::GenericConverter.new(type_or_serializer, deserializer)
-        else
-          if Zebris::Types.constants.include?(type_or_serializer.to_s.to_sym)
-            properties[name] = Zebris::Types.const_get(type_or_serializer.to_s.to_sym)
-          else
-            properties[name] = type_or_serializer
-          end
-        end
+        properties[name] = resolve_type(type_or_serializer, deserializer)
+
         self.send(:attr_accessor, name)
       end
 
@@ -147,6 +145,43 @@ module Zebris
         self.send(:define_method, :"#{name}") {
           self.send(:instance_variable_get, :"@#{name}") || self.send(:instance_variable_set, :"@#{name}", [])
         }
+      end
+
+      private
+
+      def resolve_type(type_or_serializer, deserializer)
+        if type_or_serializer.kind_of?(Proc)
+          raise "When providing a deserializer you need to provide a deserializer" if deserializer.nil?
+          Zebris::Types::GenericConverter.new(type_or_serializer, deserializer)
+        else
+          type = type_or_serializer.to_s.intern
+
+          if zebris_type?(type)
+            Zebris::Types.const_get(type)
+          elsif zebris_document?(type_or_serializer)
+            type_or_serializer
+          else
+            type
+          end
+        end
+      end
+
+      def zebris_type?(type)
+        type.to_s.start_with?("Zebris::Types") || Zebris::Types.constants.include?(type)
+      end
+
+      def zebris_document?(klass)
+        klass.respond_to?(:ancestors) ? klass.ancestors.include?(Zebris::Document) : false
+      end
+
+      def lookup_class(type)
+        if self.constants.include?(type)
+          self.const_get(type)
+        elsif Module.constants.include?(type)
+          Module.const_get(type)
+        else
+          raise "Could not find class #{type}"
+        end
       end
     end
   end
