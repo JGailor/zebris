@@ -74,4 +74,16 @@ describe Zebris::Types do
       expect{Zebris::Types::String.deserialize(o)}.to raise_exception
     end
   end
+
+  context Zebris::Types::Hash do
+    it "does not attempt to serialize the hash, relying instead on the chosen serialization format to do that" do
+      h = {"name" => "Jeremy", "age" => 34}
+      expect(Zebris::Types::String.serialize(h)).to eq(h)
+    end
+
+    it "returns the object that the underlying serializer returns" do
+      h = {"name" => "Jeremy", "age" => 34}
+      expect(Zebris::Types::String.serialize(h)).to eq(h)
+    end
+  end
 end

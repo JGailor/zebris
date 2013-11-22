@@ -48,5 +48,15 @@ module Zebris
         val
       end
     end
+
+    class Hash
+      def self.deserialize(val)
+        val
+      end
+
+      def self.serialize(val)
+        val
+      end
+    end
   end
 end
