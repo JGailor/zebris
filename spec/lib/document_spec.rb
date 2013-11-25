@@ -33,7 +33,7 @@ describe Zebris::Document do
     it "properly serializes the built in types" do
       document = Document.new
       document.stub(:key).and_return(key)
-      redis.should_receive(:set).with(key, {"key" => key, "name" => name, "age" => age, "last_update" => last_update.rfc3339}.to_json)
+      redis.should_receive(:set).with(key, {"key" => key, "name" => name, "age" => age, "last_update" => last_update.to_time.rfc2822}.to_json)
 
       document.name = name
       document.age = age

@@ -1,3 +1,6 @@
+require 'date'
+require 'time'
+
 module Zebris
   module Types
     class GenericConverter
@@ -11,7 +14,6 @@ module Zebris
 
     class BasicObject
       def self.b(val)
-        puts val
         val
       end
 
@@ -25,14 +27,37 @@ module Zebris
     end
 
     class Date
-      require 'date'
-
       def self.deserialize(date)
         ::Date.parse(date)
       end
 
       def self.serialize(val)
-        val.rfc3339
+        raise "#{val} not a valid Date" unless val.respond_to?(:to_time)
+
+        Time.serialize(val.to_time)
+      end
+    end
+
+    class Time
+      def self.deserialize(time)
+        ::Time.parse(date)
+      end
+
+      def self.serialize(val)
+        raise "#{val} not a valid Time" unless val.kind_of?(::Time)
+        val.to_time.rfc2822
+      end
+    end
+
+    class DateTime
+      def self.deserialize(date)
+        ::DateTime.parse(date)
+      end
+
+      def self.serialize(val)
+        raise "#{val} not a valid DateTime" unless val.respond_to?(:to_time)
+
+        Time.serialize(val.to_time)
       end
     end
 

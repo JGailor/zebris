@@ -109,9 +109,7 @@ module Zebris
                 instance.send(:"#{property}=", self.properties[property].deserialize(value))
               end
             elsif self.collections[property] && value.instance_of?(Array)
-              value.each do |row|
-                instance.send(:"instance_variable_get", :"@#{property}") << self.collections[property].deserialize(row)
-              end
+              instance.send(:"instance_variable_set", :"@#{property}", values.map {|row| self.collections[property].deserialize(row)})
             end
           end
         end
