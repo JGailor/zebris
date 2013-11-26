@@ -39,31 +39,8 @@ module Zebris
       def serialize(object, embed = false)
         scrub
         attributes = (embed ? {} : {"key" => object.key})
-
-        properties.each do |property, conversion|
-          if val = object.send(property.to_sym)
-            if conversion.kind_of?(Zebris::Types::GenericConverter)
-              attributes[property.to_s] = conversion.serializer.call(val)
-            else
-              if conversion.ancestors.include?(Zebris::Document)
-                attributes[property.to_s] = conversion.serialize(val, true)
-              else
-                attributes[property.to_s] = conversion.serialize(val)
-              end
-            end
-          end
-        end
-
-        collections.each do |property, klass|
-          raise "#{klass} does not implement the Zebris::Document interface" unless klass.ancestors.include?(Zebris::Document)
-
-          attributes[property] ||= []
-          object.send(:instance_variable_get, :"@#{property}").each do |record|
-            attributes[property] << klass.serialize(record, true)
-          end
-        end
-
-        attributes
+        attributes.merge!(serialize_properties(object))
+        attributes.merge!(serialize_collections(object))
       end
 
       def scrub
@@ -179,6 +156,36 @@ module Zebris
           Module.const_get(type)
         else
           raise "Could not find class #{type}"
+        end
+      end
+
+      def serialize_properties(target)
+        Hash.new.tap do |attributes|
+          properties.each do |property, conversion|
+            if val = target.send(property.to_sym)
+              if conversion.kind_of?(Zebris::Types::GenericConverter)
+                attributes[property.to_s] = conversion.serializer.call(val)
+              else
+                if conversion.ancestors.include?(Zebris::Document)
+                  attributes[property.to_s] = conversion.serialize(val, true)
+                else
+                  attributes[property.to_s] = conversion.serialize(val)
+                end
+              end
+            end
+          end
+        end
+      end
+
+      def serialize_collections(target)
+        Hash.new() {|hash, key| hash[key] = []}.tap do |attributes|
+          collections.each do |property, klass|
+            raise "#{klass} does not implement the Zebris::Document interface" unless klass.ancestors.include?(Zebris::Document)
+
+            target.send(:instance_variable_get, :"@#{property}").each do |record|
+              attributes[property] << klass.serialize(record, true)
+            end
+          end
         end
       end
     end
