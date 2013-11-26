@@ -38,9 +38,10 @@ module Zebris
 
       def serialize(object, embed = false)
         scrub
-        attributes = (embed ? {} : {"key" => object.key})
-        attributes.merge!(serialize_properties(object))
-        attributes.merge!(serialize_collections(object))
+        (embed ? {} : {"key" => object.key}).tap do |attributes|
+          attributes.merge!(serialize_properties(object))
+          attributes.merge!(serialize_collections(object))
+        end
       end
 
       def scrub
