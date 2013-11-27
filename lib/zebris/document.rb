@@ -182,7 +182,7 @@ module Zebris
         Hash.new() {|hash, key| hash[key] = []}.tap do |attributes|
           collections.each do |property, klass|
             raise "#{klass} does not implement the Zebris::Document interface" unless klass.ancestors.include?(Zebris::Document)
-
+            target.send(:instance_variable_set, :"@#{property}", []) unless target.send(:instance_variable_get, :"@#{property}")
             target.send(:instance_variable_get, :"@#{property}").each do |record|
               attributes[property] << klass.serialize(record, true)
             end
