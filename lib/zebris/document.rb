@@ -9,7 +9,7 @@ module Zebris
 
       data = self.class.serialize(self)
 
-      result = Zebris.redis.set self.key, data.to_json
+      result = Zebris.redis.set self.key, Zebris.serializer.serialize(data)
 
       raise "Could not save #{self.class}" unless result == "OK"
 
@@ -27,13 +27,7 @@ module Zebris
 
       def find(key)
         stored = Zebris.redis.get key
-
-        if stored
-          data = JSON.parse(stored)
-          deserialize(data)
-        else
-          nil
-        end
+        stored ? deserialize(Zebris.serializer.deserialize(stored)) : nil
       end
 
       def serialize(object, embed = false)
